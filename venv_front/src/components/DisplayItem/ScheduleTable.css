@@ -1,0 +1,43 @@
+table {
+  border-spacing:0; /* Removes the cell spacing via CSS */
+  border-collapse: collapse;  /* Optional - if you don't want to have double border where cells touch */
+}
+
+th.column {
+  text-align: right;
+  position: relative;
+  right: 0.5em;
+}
+
+th.header {
+  width: 4em;
+  position: relative;
+}
+
+th.header:after{
+    content: "";
+    display: block;
+    height: 50%;
+    width: 110%;
+    background-color: white;
+    position: absolute;
+    left: -1px;
+    top: 100%;
+}
+
+td.footer {
+  width: 4em;
+  height: 1em;
+  position: relative;
+}
+
+td.footer:after{
+    content: "";
+    display: block;
+    height: 59%;
+    width: 110%;
+    background-color: white;
+    position: absolute;
+    left: -1px;
+    bottom: 100%;
+}
