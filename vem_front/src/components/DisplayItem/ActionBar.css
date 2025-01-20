@@ -1,0 +1,19 @@
+.launcher-button.stopped {
+  color: darkcyan;
+}
+
+.launcher-button.active {
+  color: darkblue;
+}
+
+.launcher-button.stopped:hover {
+  filter: saturate(4);
+}
+
+.launcher-button.active:hover {
+  color: #7EC8E3;
+}
+
+.clickable:hover {
+  color: #888888;
+}

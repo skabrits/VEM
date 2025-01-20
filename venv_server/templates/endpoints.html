@@ -1,9 +1,0 @@
-<h3>Environment {{image}} is active</h3>
-<img src="{{render[environments[name].status]}}">
-<p>
-    You can access image under urls:
-</p>
-{% for i in range(N) %}
-<a href="{{environment.host}}:{{environments[name].ports[i]}}">{{environments[name].host}}:{{environments[name].ports[i]}}</a>
-<br>
-{% endfor %}

@@ -1,0 +1,1 @@
+docker-compose -f "$PSScriptRoot\app.yaml" down back front
