@@ -1,7 +1,9 @@
 import React from 'react';
+import './Status.css';
 import * as Common from './Common';
 import { usePromiseTracker } from "react-promise-tracker";
 import { ThreeDots } from 'react-loader-spinner';
+import { localizedStrings } from 'src/Localization.js'
 
 function Status(props) {
   return (
@@ -10,10 +12,10 @@ function Status(props) {
 }
 
 export function StatusElement(props) {
-    const { promiseInProgress } = usePromiseTracker({area: "status"});
-    if (!promiseInProgress) {
+    const { promiseInProgress } = usePromiseTracker({area: `${props.resource}-st`});
+    if (!promiseInProgress && Common.typeProperties[props.type]?.ready[props.ready]) {
       return <Status type={props.type} status={props.status} />
     } else {
-      return <ThreeDots color="#18A558" height={20} width={20} wrapperStyle={{display: "inline-block"}} wrapperClass="" />
+      return <>{!Common.typeProperties[props.type]?.ready[props.ready] && <div className="status-msg">{localizedStrings.loadingEnv}</div>}<div className="status-loader"><ThreeDots color="#18A558" height={20} width={20} wrapperStyle={{display: "inline-block"}} wrapperClass="" /></div></>
     }
 };

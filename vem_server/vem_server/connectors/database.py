@@ -113,6 +113,8 @@ class MySQL (DBProvider):
 
     @staticmethod
     def _and(queries):
+        if isinstance(queries, str):
+            return queries
         return " AND ".join(queries)
 
     @staticmethod
@@ -121,11 +123,13 @@ class MySQL (DBProvider):
 
     @staticmethod
     def _in(name, values):
-        return f"{name} IN ({', '.join(values)})"
+        val = ', '.join(map(lambda v: v if not isinstance(v, str) else f"'{v}'", values))
+        return f"{name} IN ({val})"
 
     @staticmethod
     def _eq(name, value):
-        return f"{name} = {value}"
+        val = value if not isinstance(value, str) else f"'{value}'"
+        return f"{name} = {val}"
 
     def _queries(self, op=None, **kwargs):
         if op is None:

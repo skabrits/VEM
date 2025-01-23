@@ -1,8 +1,12 @@
-import json
-
 import vem_server.common as common
 import vem_server.models as models
 import vem_server.models.core as core
+import requests
+import yaml
+import json
+import re
+import os
+import jq
 
 
 def get_resource_by_id(resource_class, oid):
@@ -67,12 +71,13 @@ def create_resource(resource_class, form):
 
     if "create" in resource_class.__post_process__.keys():
         response = resource_class.__post_process__["create"](res)
+    else:
+        res.__lock__ = 0
+        common.DB_PROVIDER.save_to_db(res)
 
     if response.status != 200:
         delete_resource(resource_class, res.id)
     else:
-        res.__lock__ = 0
-        common.DB_PROVIDER.save_to_db(res)
         response.data = res.id
 
     return response
@@ -108,6 +113,9 @@ def edit_resource(resource_class, oid, form):
 
     if "edit" in resource_class.__post_process__.keys():
         response = resource_class.__post_process__["edit"](res)
+    else:
+        res.__lock__ = 0
+        common.DB_PROVIDER.save_to_db(res)
 
     common.DB_PROVIDER.save_to_db(res)
     response.data = res.id
@@ -130,6 +138,50 @@ def delete_resource(resource_class, oid):
         response = resource_class.__post_process__["delete"](res)
 
     return response
+
+
+def get_resource_schema(resource_class):
+    type_table = ["int", "char", "text", "bit"]
+
+    def classify(type_str):
+        for t in type_table:
+            reg_str = f"[a-zA-Z]*(?:{t}|{t.upper()})[a-zA-Z ]*(?:\(([0-9]*)\))?"
+            match = re.match(reg_str, type_str)
+            if match is not None:
+                gr = match.groups()
+                return t, gr[0] if gr[0] is not None else 0
+        return None, None
+
+    fields = resource_class.__init_fields__.keys()
+    return models.ResponseMessage(200, data=dict(filter(lambda o: o[1][0] is not None, [(k, classify(resource_class.schema[k])) for k in fields])))
+
+
+def get_images():
+    def parse(url, expr, reg):
+        return filter(lambda i: re.match(reg, i) is not None, jq.compile(expr).input_value(requests.get(url).json()).all())
+
+    with open(os.path.join(common.BASE_PATH, "configs.yaml"), 'r') as f:
+        cfg = yaml.safe_load(f)
+
+    images = dict()
+    for r in cfg['repositories']:
+        iname = parse(r['url'], r['jq'], r['regex'])
+        rib = {(f"{r['name']}/{i}" if r['name'] != "" else i): set() for i in iname}
+        ri = rib.copy()
+        ri |= images
+        for k in rib.keys():
+            i = k[len(r['name'])+1:] if r['name'] != "" else k
+            ri[k] = ri[k].union(set(map(lambda t: f"{k}:{t}", parse(r['tags']['url'] % i, r['tags']['jq'], r['tags']['regex']))))
+        images = ri
+
+    return models.ResponseMessage(200, data=dict(map(lambda i: (i[0], list(map(lambda e: {"name": e}, i[1]))), images.items())))
+
+
+def get_settings(image):
+    result = common.DB_PROVIDER.load_from_db_by_data(core.Settings, image=image)
+    if result is None:
+        return models.ResponseMessage(200, data=[])
+    return models.ResponseMessage(200, data={image: list(map(lambda o: {"name": o.name, "id": o.id}, result))})
 
 
 def start_env(oid):

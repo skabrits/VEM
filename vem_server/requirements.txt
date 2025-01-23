@@ -4,3 +4,5 @@ Flask-Cors==5.0.0
 PyYAML==6.0.2
 mysql-connector-python==9.1.0
 mmh3==5.0.1
+requests==2.32.3
+jq==1.8.0

@@ -11,12 +11,27 @@ def list_endpoints():
     return da.list_dynamic_endpoints()
 
 
+@api.route("/api/v1/extra/<string:resource>", methods=["GET"])
+def get_resource_schema_options(resource):
+    if resource == "images":
+        return logic.get_images().to_json()
+    elif resource == "settings":
+        return logic.get_settings(request.args.get('image', '')).to_json()
+    return models.ResponseMessage(400, f"Resource {resource} not found").to_json()
+
+
+@api.route("/api/v1/schema/resources/<string:resource>", methods=["GET"])
+def get_resource_schema(resource):
+    response = da.dynamic_api(resource, logic.get_resource_schema)
+    return response
+
+
 @api.route("/api/v1/resources/<string:resource>", methods=["GET", "PUT"])
 def list_add_resource(resource):
     if request.method == "GET":
         response = da.dynamic_api(resource, logic.list_resources)
     else:
-        response = da.dynamic_api(resource, logic.create_resource, request.form)
+        response = da.dynamic_api(resource, logic.create_resource, request.get_json(force=True))
     return response
 
 

@@ -29,9 +29,11 @@ class Environment (models.DataObject, models.WebObject):
     @staticmethod
     def convert_status(o):
         if isinstance(o, dict):
-            o.update({"status": models.STATE.state2name[o["status"]]})
+            o.update({"status": models.STATE.state2name[o["status"]] if o["status"] is not None else models.STATE.state2name[models.STATE.STOPPED]})
+            o.update({"ready": models.STATE.ready2name[o["ready"]] if o["ready"] is not None else models.STATE.ready2name[models.STATE.UNREADY]})
         else:
-            setattr(o, "status", models.STATE.state2name[o.status])
+            setattr(o, "status", models.STATE.state2name[o.status] if o.status is not None else models.STATE.state2name[models.STATE.STOPPED])
+            setattr(o, "ready", models.STATE.ready2name[o.ready] if o.ready is not None else models.STATE.ready2name[models.STATE.UNREADY])
         return o
 
     @staticmethod
@@ -53,9 +55,9 @@ class Environment (models.DataObject, models.WebObject):
 
         return common.BACKEND.stop(env)
 
-    __list_fields__ = ["id", "name", "status"]
-    __init_fields__ = {"name": None, "image": None, "desired_status": (models.STATE.STOPPED, models.STATE.name2state), "settings_id": (None, int)}
-    __edit_fields__ = {"desired_status": (models.STATE.STOPPED, models.STATE.name2state), "settings_id": (None, int)}
+    __list_fields__ = ["id", "name", "status", "ready"]
+    __init_fields__ = {"name": None, "image": None, "settings_id": (None, int), "desired_status": (models.STATE.STOPPED, lambda s: int(s) % 2)}
+    __edit_fields__ = {"desired_status": (models.STATE.STOPPED, lambda s: int(s) % 2), "settings_id": (None, int)}
     __post_process__ = {
         "list": convert_status,
         "create": create_env,
@@ -72,12 +74,13 @@ class Environment (models.DataObject, models.WebObject):
         "ports_string": "TEXT",
         "status": "BIT",
         "desired_status": "BIT",
+        "ready": "BIT",
         "settings_id": "INT UNSIGNED",
     }
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if "ports_string" in kwargs.keys():
+        if "ports_string" in kwargs.keys() and kwargs["ports_string"] is not None:
             self.decode_ports()
         if "ports" in kwargs.keys():
             self.ports = kwargs["ports"]
@@ -122,6 +125,9 @@ class Environment (models.DataObject, models.WebObject):
 
     def set_status(self, status):
         self.status = status
+
+    def set_ready(self, ready):
+        self.ready = ready
 
     def set_ports(self, ports):
         self.ports = ports

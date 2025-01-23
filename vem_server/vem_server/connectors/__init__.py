@@ -2,6 +2,7 @@ import vem_server.common as common
 import vem_server.models as models
 from itertools import chain
 import subprocess
+import threading
 import json
 import os
 
@@ -12,6 +13,14 @@ class Engine:
 
     def get_status(self):
         return 501
+
+    @staticmethod
+    def commit_object(env):
+        common.DB_PROVIDER.save_to_db(env)
+
+    def unlock_object(self, env):
+        env.__lock__ = 0
+        self.commit_object(env)
 
     def create(self, env):
         pass
@@ -63,6 +72,7 @@ class Docker (Engine):
         if res.status == 200:
             env.set_status(models.STATE.STOPPED)
 
+        self.unlock_object(env)
         return res
 
     def start(self, env):
@@ -73,6 +83,7 @@ class Docker (Engine):
         if res.status == 200:
             env.set_status(models.STATE.ACTIVE)
 
+        self.unlock_object(env)
         return res
 
     def restart(self, env):
@@ -83,7 +94,21 @@ class Docker (Engine):
 
         return self.start(env)
 
-    def create(self, env):
+    def _create(self, gres, env):
+        env.set_status(models.STATE.STOPPED)
+        env.set_ready(models.STATE.UNREADY)
+        self.commit_object(env)
+
+        res = self.execute(["docker", "pull", f"{env.image}"])
+        if res.status != 200:
+            gres.status = res.status
+            gres.message = res.message
+            gres.data = res.data
+            return res
+
+        env.set_ready(models.STATE.READY)
+        self.commit_object(env)
+
         ports = self.get_ports(env.image)
         fitted_port_range = [pr[i] if i < len((pr := common.PORT_RANGE))-1 else 10000 + i - len(pr) for i in range(len(ports))]
 
@@ -93,6 +118,18 @@ class Docker (Engine):
             env.set_endpoint(self.endpoint)
             env.set_ports(fitted_port_range)
 
+        gres.status = res.status
+        gres.message = res.message
+        gres.data = res.data
+
+        self.unlock_object(env)
+        return res
+
+    def create(self, env):
+        res = models.ResponseMessage(200)
+        create_container_thread = threading.Thread(target=self._create, name="Create Image", args=[res, env])
+        create_container_thread.start()
+        create_container_thread.join(20)
         return res
 
     def get_images(self):

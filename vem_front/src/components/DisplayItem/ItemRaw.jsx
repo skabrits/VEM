@@ -9,7 +9,7 @@ import { usePromiseTracker, trackPromise } from "react-promise-tracker";
 import { localizedStrings } from 'src/Localization.js'
 
 function LoadingEP(props) {
-    const { promiseInProgress } = usePromiseTracker({area: "item"});
+    const { promiseInProgress } = usePromiseTracker({area: `${props.resource}-ld`});
     return promiseInProgress && <ThreeDots color="#18A558" height={20} width={40} wrapperStyle={{display: "inline-block"}} wrapperClass="" />
 };
 
@@ -55,14 +55,18 @@ export class ItemRaw extends React.Component {
   openEnv() {
     if (this.state.status === GCommon.ACTIVE && this.state.clickable) {
         this.setState({clickable: false});
-        trackPromise(GCommon.Api.fetchApiEnvEP(this.props.resource, { callbackOnSuccessLoad: this.processEP, callbackOnFailedLoad: this.onEPFail, callbackOnLoad: this.onEPLoad }), "item");
+        trackPromise(GCommon.Api.fetchApiEnvEP(this.props.resource, { callbackOnSuccessLoad: this.processEP, callbackOnFailedLoad: this.onEPFail, callbackOnLoad: this.onEPLoad }), `${this.props.name.replace(" ", "-")}-ld`);
     }
   }
 
-  reloadTrigger() {
-    this.setState({
-      isLoaded: false
-    });
+  reloadTrigger(deleted = false) {
+    if (deleted) {
+      this.props.reloadTrigger()
+    } else {
+      this.setState({
+        isLoaded: false
+      });
+    }
   }
 
   processData(data) {
@@ -80,7 +84,7 @@ export class ItemRaw extends React.Component {
   }
 
   loadData() {
-    GCommon.Api.fetchApiResourceGet(Common.typeProperties[this.props.type].endpoint, this.props.resource, { callbackOnSuccessLoad: this.processData });
+    GCommon.Api.fetchApiResourceGet(Common.typeProperties[this.props.type].name, this.props.resource, { callbackOnSuccessLoad: this.processData });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -90,11 +94,12 @@ export class ItemRaw extends React.Component {
   }
 
   render() {
+    const resource_name = this.props.name.replace(" ", "-")
     return (
       <div className="item-row" onClick={this.openEnv}>
         <div className="item-column item-name">{this.props.name}</div>
-        <LoadingEP />
-        <div className="item-column item-status" onClick={(e) => { e.stopPropagation(); }}><ActionBar reloadTrigger={this.reloadTrigger} resource={this.props.resource} type={this.props.type} status={this.state.status} /></div>
+        <LoadingEP resource={resource_name} />
+        <div className="item-column item-status" onClick={(e) => { e.stopPropagation(); }}><ActionBar loader_resource={resource_name} reloadTrigger={this.reloadTrigger} resource={this.props.resource} type={this.props.type} status={this.state.status} ready={this.props.ready} /></div>
       </div>
     )
   }

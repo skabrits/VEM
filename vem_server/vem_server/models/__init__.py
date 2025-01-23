@@ -89,14 +89,23 @@ class WebObject:
 class STATE:
     ACTIVE = 1
     STOPPED = 0
+    READY = 1
+    UNREADY = 0
 
     state2name = {
         ACTIVE: "active",
         STOPPED: "stopped"
     }
 
+    ready2name = {
+        READY: "ready",
+        UNREADY: "unready"
+    }
+
     name2state = {
         "active": ACTIVE,
-        "stopped": STOPPED
+        "stopped": STOPPED,
+        "ready": READY,
+        "unready": UNREADY
     }
 

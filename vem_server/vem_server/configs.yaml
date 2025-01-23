@@ -1,0 +1,19 @@
+repositories:
+  - url: "https://dk.skabrits.duckdns.org/v2/_catalog"
+    name: "dk.skabrits.duckdns.org"
+    auth: false
+    jq: ".repositories[]"
+    regex: ".*"
+    tags:
+      url: "https://dk.skabrits.duckdns.org/v2/%s/tags/list"
+      jq: ".tags[]"
+      regex: "^[0-9][0-9.]*(?<![.])$"
+  - url: "https://hub.docker.com/v2/repositories/skabrits?page_size=1000"
+    name: "skabrits"
+    auth: false
+    jq: ".results[].name"
+    regex: "web-ubuntu"
+    tags:
+      url: "https://hub.docker.com/v2/repositories/skabrits/%s/tags?page_size=1000"
+      jq: ".results[].name"
+      regex: "^[0-9][0-9.]*(?<![.])$"
