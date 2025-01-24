@@ -9,7 +9,7 @@ RUN yarn
 
 COPY src ./src
 COPY public ./public
-COPY .env pre_build.sh ./
+COPY .env pre_build.sh jsconfig.json ./
 
 RUN chmod +x pre_build.sh && ./pre_build.sh
 RUN yarn build

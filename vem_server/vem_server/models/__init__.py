@@ -19,9 +19,9 @@ status_messages = {
 
 class ResponseMessage:
     def __init__(self, status=100, message=None, data=None):
-        self.message = message if message is not None else status_messages[status] if status in status_messages.keys() else ""
         self.status = status
         self.data = data
+        self.message = message if message is not None else status_messages[status] if status in status_messages.keys() else ""
 
     def to_json(self):
         return json.dumps({"message": self.message, "status": self.status, "data": self.data})

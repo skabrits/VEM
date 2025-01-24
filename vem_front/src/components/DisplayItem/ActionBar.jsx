@@ -29,7 +29,7 @@ export class ActionBar extends React.Component {
   }
 
   processStart(data, deleted = false) {
-    if (data.status === 200) {
+    if (((data.status / 100) | 0) === 2) {
       this.props.reloadTrigger(deleted)
     } else {
       console.error(data.message)

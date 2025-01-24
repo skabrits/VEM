@@ -3,31 +3,32 @@ import './DynamicEditor.css';
 import * as Common from './Common';
 import * as GCommon from 'src/Common';
 import { toast } from 'react-toastify';
-import { useLocation } from "react-router-dom";
 import { localizedStrings } from 'src/Localization.js'
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { usePromiseTracker, trackPromise } from "react-promise-tracker";
 import { RotatingLines } from 'react-loader-spinner';
 
+
 export function DynamicEditor(props) {
   const navigate = useNavigate();
-  const { state } = useLocation();
   const context = useOutletContext();
 
   return (
     <>
     <h2>{localizedStrings.editor.types?.[context.type]}</h2>
     {
-      <DynamicEditorHelper navigate={navigate} state={state} type={context.type} preset={context?.fields ?? null} oid={context?.oid ?? null} />
+      <DynamicEditorHelper lastPage={context.lastPage} navigate={navigate} type={context.type} preset={context?.fields || {}} redirected={context?.fields || false} oid={context?.oid ?? null} lastOid={context?.lastOid} currentOid={context?.currentOid} memory={context?.memory ?? null} />
     }
     </>
   );
 }
 
+
 function LoadSubmit(props) {
   const { promiseInProgress } = usePromiseTracker({area: `${props.resource}-sbm`});
   return promiseInProgress && <div id={`lazy-bar-${props.resource}`} style={{ display: "inline", position: "absolute", width: "10%", marginTop: 40, marginLeft: "-5%" }}><RotatingLines color="#4fa94d" width={22} visible={true} /></div>
 }
+
 
 class DynamicEditorHelper extends React.Component {
 
@@ -37,6 +38,7 @@ class DynamicEditorHelper extends React.Component {
       isLoaded: false,
       fields: {},
       form: props.preset,
+      redirected: props.redirected,
       oid: props.oid,
       clickable: true
     };
@@ -55,13 +57,13 @@ class DynamicEditorHelper extends React.Component {
   }
 
   processData(data) {
-    if (data.status === 200) {
+    if (((data.status / 100) | 0) === 2) {
       this.setState({
         isLoaded: true,
         fields: data.data
       });
     } else {
-      console.error(data.message)
+      console.error(data.message);
       this.setState({
         isLoaded: false,
         fields: {}
@@ -70,10 +72,12 @@ class DynamicEditorHelper extends React.Component {
   }
 
   processPreset(data) {
-    if (data.status === 200) {
-      this.setState({
-        form: data.data
-      });
+    if (((data.status / 100) | 0) === 2) {
+      if (this.props?.currentOid !== this.props.oid){
+        this.setState({
+          form: data.data
+        });
+      }
     } else {
       console.error(data.message)
       this.setState({
@@ -84,9 +88,9 @@ class DynamicEditorHelper extends React.Component {
 
   loadData() {
     if (this.state.oid !== null) {
-      GCommon.Api.fetchApiResourceGet(this.props.type, this.state.oid, { callbackOnSuccessLoad: this.processPreset })
+      GCommon.Api.fetchApiResourceGet(this.props.type, this.state.oid, { callbackOnSuccessLoad: this.processPreset });
     }
-    GCommon.Api.fetchApiSchema(this.props.type, { callbackOnSuccessLoad: this.processData })
+    GCommon.Api.fetchApiSchema(this.props.type, { callbackOnSuccessLoad: this.processData });
   }
 
   updateForm(key, value) {
@@ -96,8 +100,9 @@ class DynamicEditorHelper extends React.Component {
   }
 
   onSubmitSuccessLoad(data) {
-    if (data.status === 200) {
-      this.props.navigate("/")
+    if (((data.status / 100) | 0) === 2) {
+      let locationData = {state: {preset: this.props.memory, currentOid: this.props.lastOid}};
+      this.props.navigate(this.props.lastPage ?? "/", locationData);
     } else {
       toast.dismiss();
       toast.error(data.message, {autoClose: 5000});
@@ -109,12 +114,16 @@ class DynamicEditorHelper extends React.Component {
     if (this.state.clickable) {
       this.setState({clickable: false});
       const data = this.state.form;
-      trackPromise(GCommon.Api.fetchApiResource(this.props.type, { callbackOnSuccessLoad: this.onSubmitSuccessLoad, callbackOnFailedLoad: this.onSubmitLoad, callbackOnLoad: this.onSubmitLoad }, { method: 'PUT', body: JSON.stringify(data), headers: {"Content-Type": "application/json"} }), `${this.props.type}-sbm`)
+      if (this.state.oid !== null) {
+        trackPromise(GCommon.Api.fetchApiResourceGet(this.props.type, this.state.oid, { callbackOnSuccessLoad: this.onSubmitSuccessLoad, callbackOnFailedLoad: this.onSubmitLoad, callbackOnLoad: this.onSubmitLoad }, { method: 'POST', body: JSON.stringify(data), headers: {"Content-Type": "application/json"} }), `${this.props.type}-sbm`);
+      } else {
+        trackPromise(GCommon.Api.fetchApiResource(this.props.type, { callbackOnSuccessLoad: this.onSubmitSuccessLoad, callbackOnFailedLoad: this.onSubmitLoad, callbackOnLoad: this.onSubmitLoad }, { method: 'PUT', body: JSON.stringify(data), headers: {"Content-Type": "application/json"} }), `${this.props.type}-sbm`);
+      }
     }
   }
 
   componentDidMount() {
-    this.loadData()
+    this.loadData();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -123,24 +132,45 @@ class DynamicEditorHelper extends React.Component {
         isLoaded: false,
         fields: {},
         form: this.props.preset,
+        redirected: true,
         oid: this.props.oid,
         clickable: true
       });
     }
 
     if (this.state.isLoaded !== true) {
-      this.loadData()
+      this.loadData();
     }
   }
 
   renderInput([key, value]) {
-    const specialKey = Object.keys(Common.specialTypes).find(t_key => key.match(t_key))
-    const resource = specialKey !== undefined ? key.match(specialKey)[1].replace(new RegExp(".*"), Common.specialTypes[specialKey]?.[0] ?? "$&") : key
+    const specialKey = Object.keys(Common.specialTypes).find(t_key => key.match(t_key));
+    let resource =  key;
+    let inputElement = Common.types[value[0]];
+
+    if (specialKey !== undefined) {
+      resource =  key.match(specialKey)[1].replace(new RegExp(".*"), Common.specialTypes[specialKey]?.[0] ?? "$&");
+      inputElement = (Common.specialTypes[specialKey][1] ?? Common.specialTypes[specialKey]);
+    }
+
+    const params = {
+      resource: resource,
+      key: key,
+      name: key,
+      value: value,
+      class: "form-element",
+      propertySetter: this.updateForm,
+      sharedState: this.state.form,
+      memory: this.props.memory,
+      redirected: this.state?.redirected,
+      oidProvided: this.state.oid
+    };
+
     return(
       <div key={`${key}-div`} className="form-element">
         <label htmlFor={key} className="form-element" key={`${key}-label`}>{localizedStrings.editor?.[key] ?? key}</label>
         {
-          specialKey !== undefined ? React.createElement(Common.specialTypes[specialKey][1] ?? Common.specialTypes[specialKey], {resource: resource, key: key, name: key, value: value, class: "form-element", propertySetter: this.updateForm, sharedState: this.state.form}) : React.createElement(Common.types[value[0]], {key: key, name: key, value: value, class: "form-element", propertySetter: this.updateForm, sharedState: this.state.form})
+          React.createElement(inputElement, params)
         }
       </div>
     );

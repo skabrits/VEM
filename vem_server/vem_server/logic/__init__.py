@@ -75,7 +75,7 @@ def create_resource(resource_class, form):
         res.__lock__ = 0
         common.DB_PROVIDER.save_to_db(res)
 
-    if response.status != 200:
+    if response.status // 100 != 2:
         delete_resource(resource_class, res.id)
     else:
         response.data = res.id
@@ -194,7 +194,6 @@ def start_env(oid):
 
     res.desired_status = models.STATE.ACTIVE
     response = common.BACKEND.start(res)
-    common.logger.info(res.get_repr())
     common.DB_PROVIDER.save_to_db(res)
 
     return response

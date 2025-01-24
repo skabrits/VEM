@@ -32,12 +32,12 @@ export class ItemRaw extends React.Component {
   }
 
   processEP(data) {
-    if (data.status === 200) {
+    if (((data.status / 100) | 0) === 2) {
       if (data.data === null) {
           toast.dismiss();
           toast.error(`${localizedStrings.errorEndpointStart} ${this.props.name} ${localizedStrings.errorEndpointEnd}`);
         } else {
-          window.open(`http://${data.data}`, "_blank");
+          window.open(`${data.data}`, "_blank");
         }
     }
   }
@@ -70,7 +70,7 @@ export class ItemRaw extends React.Component {
   }
 
   processData(data) {
-    if (data.status === 200) {
+    if (((data.status / 100) | 0) === 2) {
       this.setState({
         isLoaded: true,
         status: data.data.status

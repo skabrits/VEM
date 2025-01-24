@@ -38,9 +38,9 @@ class Environment (models.DataObject, models.WebObject):
 
     @staticmethod
     def create_env(env):
-        res = common.BACKEND.create(env)
+        res = common.BACKEND.create(env, not (env.desired_status == models.STATE.ACTIVE))
 
-        if res.status != 200:
+        if res.status // 100 != 2:
             return res
 
         if env.desired_status == models.STATE.ACTIVE:
@@ -135,6 +135,9 @@ class Environment (models.DataObject, models.WebObject):
 
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
+
+    def __to_serializable__(self):
+        return super().__to_serializable__() | {"__enabled__": list(self.__edit_fields__.keys())}
 
 
 class PV (models.DataObject, models.WebObject):

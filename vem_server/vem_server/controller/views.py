@@ -38,7 +38,7 @@ def list_add_resource(resource):
 @api.route("/api/v1/resources/<string:resource>/<int:oid>", methods=["GET", "POST", "DELETE"])
 def get_modify_resource(resource, oid):
     if request.method == "POST":
-        response = da.dynamic_api(resource, logic.edit_resource, oid, request.form)
+        response = da.dynamic_api(resource, logic.edit_resource, oid, request.get_json(force=True))
     elif request.method == "DELETE":
         response = da.dynamic_api(resource, logic.delete_resource, oid)
     else:

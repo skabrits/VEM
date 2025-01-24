@@ -10,64 +10,78 @@ div.form-element:has(input[type="checkbox"]) {
 }
 
 input.form-element {
-    display: block;
-    width: 100%;
-    padding: 0.5rem;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 3px;
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 3px;
 }
 
 input[type="radio"][class*="form-element"], input[type="checkbox"][class*="form-element"] {
-    display: inline;
-    width: 10%;
+  display: inline;
+  width: 10%;
 }
 
 select.form-element {
-    display: block;
-    width: 100%;
-    margin-bottom: 1rem;
-    padding: 0.6rem;
-    box-sizing: border-box;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.6rem;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 5px;
 }
 
 label.form-element {
-    display: block;
-    width: 100%;
-    margin-top: 0.5rem;
-    margin-bottom: 0.3rem;
-    text-align: left;
-    color: #555;
-    font-weight: bold;
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.3rem;
+  text-align: left;
+  color: #555;
+  font-weight: bold;
 }
 
 label.form-element:has(~ input[type="checkbox"]) {
-    display: inline;
-    width: 100%;
-    vertical-align: 10%;
-    text-align: left;
-    color: #555;
-    font-weight: bold;
+  display: inline;
+  width: 100%;
+  vertical-align: 10%;
+  text-align: left;
+  color: #555;
+  font-weight: bold;
 }
 
 button.form-element {
-    padding: 0.8rem;
-    border-radius: 10px;
-    margin: 2rem;
-    border: none;
-    color: white;
-    cursor: pointer;
-    background-color: #4caf50;
-    min-width: 6rem;
-    width: 20%;
+  padding: 0.8rem;
+  border-radius: 10px;
+  margin: 2rem;
+  border: none;
+  color: white;
+  cursor: pointer;
+  background-color: #4caf50;
+  min-width: 6rem;
+  width: 20%;
 }
 
-textarea.form-element {
-    resize: none;
-    width: 98%;
-    max-height: 30vh;
+.editor-area {
+  resize: none;
+  background-color: #FCF7F1;
+  border-radius: 5px;
+}
+
+.editor-area textarea {
+  outline: 0;
+  resize: none;
+  min-height: 10vh;
+}
+
+.editor-container {
+  max-height: 30vh;
+  overflow: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
 }
 
 form {

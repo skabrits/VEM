@@ -31,7 +31,7 @@ export class DisplayItem extends React.Component {
   }
 
   processData(data) {
-    if (data.status === 200) {
+    if (((data.status / 100) | 0) === 2) {
       this.setState({
         isLoaded: true,
         items: data.data

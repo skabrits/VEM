@@ -50,7 +50,7 @@ class Docker (Engine):
 
     def execute(self, args, data=False):
         status = self.get_status()
-        if status != 200:
+        if status // 100 != 2:
             return models.ResponseMessage(status)
         res = subprocess.run(args, capture_output=True, shell=self.use_shell)
         if res.returncode != 0:
@@ -60,47 +60,52 @@ class Docker (Engine):
 
     def destroy(self, env):
         res = self.execute(["docker", "rm", "-f", f'{common.secure_name(env.name)}'])
-        if res.status == 200:
+        if res.status // 100 == 2:
             env.set_status(models.STATE.STOPPED)
 
         return res
 
-    def stop(self, env):
+    def stop(self, env, unlock=True):
         if env.status == models.STATE.STOPPED:
-            return models.ResponseMessage(601)
+            if unlock:
+                self.unlock_object(env)
+            return models.ResponseMessage(208)
         res = self.execute(["docker", "stop", f'{common.secure_name(env.name)}'])
-        if res.status == 200:
+        if res.status // 100 == 2:
             env.set_status(models.STATE.STOPPED)
 
-        self.unlock_object(env)
+        if unlock:
+            self.unlock_object(env)
         return res
 
-    def start(self, env):
+    def start(self, env, unlock=True):
         if env.status == models.STATE.ACTIVE:
-            return models.ResponseMessage(601)
+            if unlock:
+                self.unlock_object(env)
+            return models.ResponseMessage(208)
         res = self.execute(["docker", "start", f'{common.secure_name(env.name)}'])
-        common.logger.info(res.to_json())
-        if res.status == 200:
+        if res.status // 100 == 2:
             env.set_status(models.STATE.ACTIVE)
 
-        self.unlock_object(env)
+        if unlock:
+            self.unlock_object(env)
         return res
 
     def restart(self, env):
         if env.status == models.STATE.ACTIVE:
-            res = self.stop(env)
-            if res.status != 200:
+            res = self.stop(env, unlock=False)
+            if res.status // 100 != 2:
                 return res
 
         return self.start(env)
 
-    def _create(self, gres, env):
+    def _create(self, gres, env, unlock=True):
         env.set_status(models.STATE.STOPPED)
         env.set_ready(models.STATE.UNREADY)
         self.commit_object(env)
 
         res = self.execute(["docker", "pull", f"{env.image}"])
-        if res.status != 200:
+        if res.status // 100 != 2:
             gres.status = res.status
             gres.message = res.message
             gres.data = res.data
@@ -113,7 +118,7 @@ class Docker (Engine):
         fitted_port_range = [pr[i] if i < len((pr := common.PORT_RANGE))-1 else 10000 + i - len(pr) for i in range(len(ports))]
 
         res = self.execute(["docker", "create", "--name", f'{common.secure_name(env.name)}'] + list(chain.from_iterable([["-p", f'{fitted_port_range[i]}:{ports[i]}'] for i in range(len(ports))])) + [f'{env.image}'])
-        if res.status == 200:
+        if res.status // 100 == 2:
             env.set_status(models.STATE.STOPPED)
             env.set_endpoint(self.endpoint)
             env.set_ports(fitted_port_range)
@@ -122,12 +127,13 @@ class Docker (Engine):
         gres.message = res.message
         gres.data = res.data
 
-        self.unlock_object(env)
+        if unlock:
+            self.unlock_object(env)
         return res
 
-    def create(self, env):
+    def create(self, env, unlock=True):
         res = models.ResponseMessage(200)
-        create_container_thread = threading.Thread(target=self._create, name="Create Image", args=[res, env])
+        create_container_thread = threading.Thread(target=self._create, name="Create Image", args=[res, env, unlock])
         create_container_thread.start()
         create_container_thread.join(20)
         return res
