@@ -85,14 +85,14 @@ export class OptionsGenerator extends React.Component {
   loadData(url, setValue = false) {
     let sfunc = this.processData;
     if (setValue) {
-      sfunc = (data) => {this.processData(data); this.props.propertySetter(this.props.name, this.processValue(this.state.data));}
+      sfunc = (data) => {this.processData(data); this.props.propertySetter(this.props.name, this.processValue(this.state.data, data?.data));}
     }
     trackPromise(GCommon.Api.fetchApiExtra(url, { callbackOnSuccessLoad: sfunc }), `${this.props.resource}-opt`);
   }
 
-  processValue(val) {
+  processValue(val, options = undefined) {
     if (this.props?.isID) {
-      const o = Object.values(this.state.options)[0];
+      const o = Object.values(options ?? this.state.options)[0];
       const s = (o ? o.find(v => v.name === val) : o);
       (this.state.redirected || (s ?? (val === null || val === ""))) ? this.setState({addIdResource: false}) : this.setState({addIdResource: true});
       return s?.id ?? null
