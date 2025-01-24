@@ -1,7 +1,7 @@
 Get-job | Remove-Job
 
 cd ..\vem_server
-docker build . -t skabrits/vem_server:dev
+docker build . -t skabrits/vem-server:dev
 
 docker-compose -f "$PSScriptRoot\app.yaml" up -d db phpmyadmin back
 

@@ -22,14 +22,14 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=test-123
   front:
-    image: skabrits/vem_front:dev
+    image: skabrits/vem-front:dev
     restart: always
     ports:
       - "3000:80"
     environment:
       REACT_APP_API_BASE_URL: "http://localhost:8000"
   back:
-    image: skabrits/vem_server:dev
+    image: skabrits/vem-server:dev
     privileged: true
     restart: always
     ports:
