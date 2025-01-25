@@ -1,6 +1,6 @@
 import React from 'react';
 import './Status.css';
-import * as Common from './Common';
+import * as Common from 'src/components/common/Common';
 import { usePromiseTracker } from "react-promise-tracker";
 import { ThreeDots } from 'react-loader-spinner';
 import { localizedStrings } from 'src/Localization.js'

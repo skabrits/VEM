@@ -18,6 +18,7 @@ def list_dynamic_endpoints():
     return ResponseMessage(200, data=api_endpoints).to_json()
 
 
+# TODO: Move api endpoints to common
 def dynamic_api(resource, func, *args, **kwargs):
     api_endpoints = dict()
     for web_class in common.list_subclasses("vem_server.models", models.WebObject):

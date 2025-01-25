@@ -46,6 +46,7 @@ class DynamicEditorHelper extends React.Component {
     this.processPreset = this.processPreset.bind(this);
     this.loadData = this.loadData.bind(this);
     this.updateForm = this.updateForm.bind(this);
+    this.removeKey = this.removeKey.bind(this);
     this.renderInput = this.renderInput.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.onSubmitLoad = this.onSubmitLoad.bind(this);
@@ -97,6 +98,10 @@ class DynamicEditorHelper extends React.Component {
     if (value !== null && (this.state.form?.[key] ?? "") !== value) {
       this.setState({form: {...this.state.form, [key]: value}});
     }
+  }
+
+  removeKey(key) {
+    this.setState({form: {...this.state.form, [key]: undefined}});
   }
 
   onSubmitSuccessLoad(data) {
@@ -160,6 +165,7 @@ class DynamicEditorHelper extends React.Component {
       value: value,
       class: "form-element",
       propertySetter: this.updateForm,
+      propertyUnsetter: this.removeKey,
       sharedState: this.state.form,
       memory: this.props.memory,
       redirected: this.state?.redirected,

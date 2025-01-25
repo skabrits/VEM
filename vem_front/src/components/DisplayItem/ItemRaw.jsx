@@ -1,7 +1,6 @@
 import React from 'react';
 import './ItemRaw.css';
-import {ActionBar} from './ActionBar';
-import * as Common from './Common';
+import {ActionBar} from 'src/components/common/ActionBar/ActionBar';
 import * as GCommon from 'src/Common';
 import { toast } from 'react-toastify';
 import { ThreeDots } from 'react-loader-spinner';
@@ -84,7 +83,7 @@ export class ItemRaw extends React.Component {
   }
 
   loadData() {
-    GCommon.Api.fetchApiResourceGet(Common.typeProperties[this.props.type].name, this.props.resource, { callbackOnSuccessLoad: this.processData });
+    GCommon.Api.fetchApiResourceGet(this.props.type, this.props.resource, { callbackOnSuccessLoad: this.processData });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -99,7 +98,7 @@ export class ItemRaw extends React.Component {
       <div className="item-row" onClick={this.openEnv}>
         <div className="item-column item-name">{this.props.name}</div>
         <LoadingEP resource={resource_name} />
-        <div className="item-column item-status" onClick={(e) => { e.stopPropagation(); }}><ActionBar loader_resource={resource_name} reloadTrigger={this.reloadTrigger} resource={this.props.resource} type={this.props.type} status={this.state.status} ready={this.props.ready} /></div>
+        <div className="item-column item-status" onClick={(e) => { e.stopPropagation(); }}><ActionBar loader_resource={`${resource_name}-st`} reloadTrigger={this.reloadTrigger} resource={this.props.resource} type={this.props.type} status={this.state.status} ready={this.props.ready} /></div>
       </div>
     )
   }

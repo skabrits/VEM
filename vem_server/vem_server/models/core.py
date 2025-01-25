@@ -3,7 +3,17 @@ import vem_server.models as models
 import sys
 
 
-class Settings (models.DataObject, models.WebObject):
+class WebDataObject(models.DataObject, models.WebObject):
+    __store__ = False
+    __create_api__ = False
+
+    def __to_serializable__(self):
+        return super().__to_serializable__() | {"__enabled__": list(self.__edit_fields__.keys())}
+
+
+class Settings (WebDataObject):
+    __store__ = True
+    __create_api__ = True
 
     __plural__ = True
 
@@ -25,7 +35,10 @@ class Settings (models.DataObject, models.WebObject):
         return common.hash32(self.name + self.image)
 
 
-class Environment (models.DataObject, models.WebObject):
+class Environment (WebDataObject):
+    __store__ = True
+    __create_api__ = True
+
     @staticmethod
     def convert_status(o):
         if isinstance(o, dict):
@@ -136,11 +149,11 @@ class Environment (models.DataObject, models.WebObject):
     def set_endpoint(self, endpoint):
         self.endpoint = endpoint
 
-    def __to_serializable__(self):
-        return super().__to_serializable__() | {"__enabled__": list(self.__edit_fields__.keys())}
 
+class PV (WebDataObject):
+    __store__ = True
+    __create_api__ = True
 
-class PV (models.DataObject, models.WebObject):
     __list_fields__ = ["id", "name", "status"]
     __init_fields__ = {"name": None, "image": None, "settings_id": (None, int)}
     __edit_fields__ = {"settings_id": (None, int)}

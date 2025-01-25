@@ -6,7 +6,7 @@ import { HiOutlineStop } from "react-icons/hi2";
 import { VscDebugStart } from "react-icons/vsc";
 
 export const typeProperties = {
-    "env": {
+    [Common.RESOURCE_NAMES.ENVIRONMENTS]: {
         "status": {
             [Common.ACTIVE]: status_green,
             [Common.STOPPED]: status_red
@@ -20,16 +20,14 @@ export const typeProperties = {
             [Common.STOPPED]: VscDebugStart
         },
         "renderControl": true,
-        "header": localizedStrings.envsHeader,
-        "name": process.env.REACT_APP_API_ENVIRONMENTS_NAME
+        "header": localizedStrings.envsHeader
     },
-    "pv": {
+    [Common.RESOURCE_NAMES.PVS]: {
         "status": {
             [Common.ACTIVE]: status_red,
             [Common.STOPPED]: status_green
         },
         "renderStop": false,
-        "header": localizedStrings.pvsHeader,
-        "name": process.env.REACT_APP_API_PVS_NAME
+        "header": localizedStrings.pvsHeader
     }
 }

@@ -1,15 +1,17 @@
 import React from 'react';
 import './DisplayItem.css';
 import { ItemRaw } from './ItemRaw';
-import * as Common from './Common';
+import * as Common from 'src/components/common/Common';
 import * as GCommon from 'src/Common';
 import { FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+
 function NewResource(props) {
   const navigate = useNavigate();
-  return <div className="add-item" onClick={(e) => navigate(`/editor/${Common.typeProperties[props.resource].name}`)}><div className="icon-container"><FaPlus size={15} /></div></div>
+  return <div className="add-item" onClick={(e) => navigate(`/editor/${props.resource}`)}><div className="icon-container"><FaPlus size={15} /></div></div>
 }
+
 
 export class DisplayItem extends React.Component {
 
@@ -46,7 +48,7 @@ export class DisplayItem extends React.Component {
   }
 
   loadData() {
-    GCommon.Api.fetchApiResource(Common.typeProperties[this.props.type].name, { callbackOnSuccessLoad: this.processData })
+    GCommon.Api.fetchApiResource(this.props.type, { callbackOnSuccessLoad: this.processData })
   }
 
   componentDidMount() {

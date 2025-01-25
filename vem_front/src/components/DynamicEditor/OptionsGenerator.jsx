@@ -1,12 +1,13 @@
 import React from 'react';
 import './OptionsGenerator.css';
-import * as Common from './Common';
 import * as GCommon from 'src/Common';
 import { localizedStrings } from 'src/Localization.js'
 import { usePromiseTracker, trackPromise } from "react-promise-tracker";
 import { RotatingLines } from 'react-loader-spinner';
 import { FaPlus } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
+import {ActionBar} from 'src/components/common/ActionBar/ActionBar';
+
 
 function NewResource(props) {
   const navigate = useNavigate();
@@ -32,10 +33,31 @@ function NewResource(props) {
   return <div className="small input-icon" onClick={(e) => navigate(`/editor/${props.resource}`, locationData)}><FaPlus size={20} /></div>
 }
 
+
+function ResourceActionBar(props) {
+  const location = useLocation();
+  const locationData = {
+    state: {
+      lastPage: location.pathname,
+      memory: {
+        ...props.redirectBlock.memory,
+        [props.redirectBlock.fieldName]: props.redirectBlock.name
+      },
+      preset: {
+        name: props.redirectBlock.name
+      },
+      lastOid: props.redirectBlock.oid
+    }
+  };
+  return <div className="action-bar" onClick={(e) => { e.stopPropagation(); }}>{React.createElement(ActionBar, {...props, locationData: locationData, redirectBlock: undefined})}</div>
+}
+
+
 function LoadOptions(props) {
   const { promiseInProgress } = usePromiseTracker({area: `${props.resource}-opt`, delay: 1});
   return promiseInProgress && <div id={`lazy-bar-${props.resource}`} className="big input-icon"><RotatingLines color="#4fa94d" width={22} visible={true} /></div>
 }
+
 
 export class OptionsGenerator extends React.Component {
 
@@ -45,6 +67,7 @@ export class OptionsGenerator extends React.Component {
       isLoaded: false,
       options: {},
       addIdResource: false,
+      isNew: false,
       data: props.sharedState?.[props.name] ?? "",
       redirected: this.props?.redirected,
       disabled: props.sharedState?.__enabled__ && !props.sharedState.__enabled__.includes(props.name)
@@ -65,7 +88,7 @@ export class OptionsGenerator extends React.Component {
       if (this.props?.isID) {
         let o = Object.values(data.data)[0];
         const l = (o ? o.length : 0);
-        l > 0 && this.setState({addIdResource: false})
+        l > 0 && this.setState({addIdResource: false, isNew: false})
       }
 
       this.setState({
@@ -90,11 +113,11 @@ export class OptionsGenerator extends React.Component {
     trackPromise(GCommon.Api.fetchApiExtra(url, { callbackOnSuccessLoad: sfunc }), `${this.props.resource}-opt`);
   }
 
-  processValue(val, options = undefined) {
+  processValue(val, { checkNew = false } = {}, options = undefined) {
     if (this.props?.isID) {
       const o = Object.values(options ?? this.state.options)[0];
       const s = (o ? o.find(v => v.name === val) : o);
-      (this.state.redirected || (s ?? (val === null || val === ""))) ? this.setState({addIdResource: false}) : this.setState({addIdResource: true});
+      (this.state.redirected || (s ?? (val === null || val === ""))) ? this.setState({addIdResource: checkNew ? this.state.addIdResource : false, isNew: false}) : this.setState({addIdResource: checkNew ? this.state.addIdResource : true, isNew: true});
       return s?.id ?? null
     }
     return val
@@ -154,15 +177,32 @@ export class OptionsGenerator extends React.Component {
       oid: this.props?.oidProvided
     };
 
+    const ERProps = {
+      fieldName: this.props.name,
+      name: this.state.data,
+      memory: this.props.sharedState,
+      oid: this.props?.oidProvided
+    };
+
+    const RABProps = {
+      loader_resource: `${this.props.resource}-opt`,
+      reloadTrigger: () => {this.setState({isLoaded: false, data: ""}); this.props.propertyUnsetter(this.props.name)},
+      resource: this.props.sharedState?.[this.props.name],
+      type: this.props.resource,
+      includeStatus: false,
+      redirectBlock: ERProps
+    }
+
     return (
       <>
       <LoadOptions resource={this.props.resource} />
       {this.state.addIdResource && React.createElement(NewResource, NRProps)}
-      <input type="text" disabled={this.state.disabled} value={this.state.data} list={`${this.props.name}-list`} className={this.props.class} key={this.props.name} id={this.props.name} name={this.props.name} maxLength={this.props.value[1] || 1024} onChange={(e) => this.setState({data: e.target.value})} onFocus={(e) => this.setState({addIdResource: false})} onBlur={(e) => this.props.propertySetter(this.props.name, this.processValue(e.target.value))} />
+      <input type="text" disabled={this.state.disabled} value={this.state.data} list={`${this.props.name}-list`} className={this.props.class} key={this.props.name} id={this.props.name} name={this.props.name} maxLength={this.props.value[1] || 1024} onChange={(e) => {this.setState({data: e.target.value}); this.processValue(e.target.value, {checkNew: true})}} onFocus={(e) => this.setState({addIdResource: false})} onBlur={(e) => this.props.propertySetter(this.props.name, this.processValue(e.target.value))} />
       {(!this.state.addIdResource) && <datalist id={`${this.props.name}-list`} key={`${this.props.name}-list`} defaultValue={""}>
         <option value="" disabled>{localizedStrings.editor.selectOption}</option>
         {Object.entries(this.state.options).map(this.renderGroup)}
       </datalist>}
+      {(this.props?.isID && !this.state.isNew) && React.createElement(ResourceActionBar, RABProps)}
       </>
     )
   }

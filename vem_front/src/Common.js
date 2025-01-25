@@ -3,6 +3,15 @@ export const STOPPED="stopped"
 export const READY="ready"
 export const UNREADY="unready"
 
+
+export const RESOURCE_NAMES = {
+  IMAGES: "images",
+  SETTINGS: process.env.REACT_APP_API_SETTINGS_NAME,
+  ENVIRONMENTS: process.env.REACT_APP_API_ENVIRONMENTS_NAME,
+  PVS: process.env.REACT_APP_API_PVS_NAME
+};
+
+
 export class Api {
   static basePath() { return process.env.REACT_APP_API_BASE_URL + process.env.REACT_APP_API_PREFIX }
   static resourcePath(resource) { return this.basePath() + process.env.REACT_APP_API_RESOURCE_ENDPOINT + "/" + resource }

@@ -123,6 +123,7 @@ def edit_resource(resource_class, oid, form):
     return response
 
 
+# TODO: Check if object is safe to remove
 def delete_resource(resource_class, oid):
     res = get_resource_by_id(resource_class, oid)
     if res is None:
