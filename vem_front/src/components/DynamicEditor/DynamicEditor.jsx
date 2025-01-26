@@ -169,7 +169,8 @@ class DynamicEditorHelper extends React.Component {
       sharedState: this.state.form,
       memory: this.props.memory,
       redirected: this.state?.redirected,
-      oidProvided: this.state.oid
+      oidProvided: this.state.oid,
+      parentType: this.props.type
     };
 
     return(

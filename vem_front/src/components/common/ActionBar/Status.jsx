@@ -12,7 +12,7 @@ function Status(props) {
 }
 
 export function StatusElement(props) {
-    const { promiseInProgress } = usePromiseTracker({area: `${props.resource}-st`});
+    const { promiseInProgress } = usePromiseTracker({area: `${props.resource}`});
     if (!promiseInProgress && Common.typeProperties[props.type]?.ready[props.ready]) {
       return <Status type={props.type} status={props.status} />
     } else {

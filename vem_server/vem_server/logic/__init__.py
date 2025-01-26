@@ -124,13 +124,31 @@ def edit_resource(resource_class, oid, form):
 
 
 # TODO: Check if object is safe to remove
-def delete_resource(resource_class, oid):
+def available_for_deletion(parent_resource_class, oid, rname):
+    return common.DB_PROVIDER.load_from_db_by_data(parent_resource_class, **{rname: oid})
+
+
+def delete_resource(resource_class, oid, rname=None, parent_resource=None):
     res = get_resource_by_id(resource_class, oid)
     if res is None:
         return models.ResponseMessage(400, f"Resource {oid} not found.")
 
     if res.__lock__ == 1:
         return models.ResponseMessage(400, f"Resource {oid} is busy.")
+
+    if rname is not None:
+        resource_classes = dict()
+        for web_class in common.list_subclasses("vem_server.models", models.WebObject):
+            if web_class.__create_api__:
+                resource_classes[web_class.__lower_name__] = web_class
+        if parent_resource not in resource_classes.keys():
+            return models.ResponseMessage(400, f"Resource {parent_resource} is not found.")
+
+        pr = available_for_deletion(resource_classes[parent_resource], oid, rname)
+        if pr is not None:
+            pr_i = next(pr, None)
+            if pr_i is not None:
+                return models.ResponseMessage(400, f"Resource is hooked to {pr_i.name}.")
 
     common.DB_PROVIDER.delete_from_db_by_id(res, oid)
     response = models.ResponseMessage(200)

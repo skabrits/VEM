@@ -7,6 +7,7 @@ import * as GCommon from 'src/Common';
 import './ActionBar.css';
 import { trackPromise } from 'react-promise-tracker';
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 function EditResource(props) {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export class ActionBar extends React.Component {
   deleteResource() {
     if (this.state.clickable) {
       this.setState({clickable: false});
-      trackPromise(GCommon.Api.fetchApiResourceGet(this.props.type, this.props.resource, { callbackOnSuccessLoad: (data) => this.processStart(data, true), callbackOnFailedLoad: this.onStartLoad, callbackOnLoad: this.onStartLoad }, {method: 'DELETE'}), `${this.props.loader_resource}`);
+      trackPromise(GCommon.Api.fetchApiResourceGet(this.props.type, this.props.resource + (this.props?.deleteType ? `?rname=${this.props.deleteType}&parent_resource=${this.props?.parentType}` : ""), { callbackOnSuccessLoad: (data) => {this.processStart(data, true); if (((data.status / 100) | 0) !== 2) { toast.dismiss(); toast.error(data.message, {autoClose: 5000}) }}, callbackOnFailedLoad: this.onStartLoad, callbackOnLoad: this.onStartLoad }, {method: 'DELETE'}), `${this.props.loader_resource}`);
     }
   }
 

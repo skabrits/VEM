@@ -38,6 +38,7 @@ services:
       DB_PROVIDER: "MySQL"
       DB_ENDPOINT: db
       DB_CONNECTIONS: 2
+      LOG_LEVEL: "DEBUG"
     volumes:
       - //var/run/docker.sock:/var/run/docker.sock
 volumes:

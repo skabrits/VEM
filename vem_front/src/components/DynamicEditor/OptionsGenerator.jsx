@@ -49,7 +49,7 @@ function ResourceActionBar(props) {
       lastOid: props.redirectBlock.oid
     }
   };
-  return <div className="action-bar" onClick={(e) => { e.stopPropagation(); }}>{React.createElement(ActionBar, {...props, locationData: locationData, redirectBlock: undefined})}</div>
+  return <div className="action-bar" onClick={(e) => { e.stopPropagation(); }}>{React.createElement(ActionBar, {...props, locationData: locationData, deleteType: props.redirectBlock.fieldName, redirectBlock: undefined})}</div>
 }
 
 
@@ -190,6 +190,7 @@ export class OptionsGenerator extends React.Component {
       resource: this.props.sharedState?.[this.props.name],
       type: this.props.resource,
       includeStatus: false,
+      parentType: this.props.parentType,
       redirectBlock: ERProps
     }
 

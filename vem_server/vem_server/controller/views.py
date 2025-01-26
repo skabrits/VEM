@@ -40,7 +40,7 @@ def get_modify_resource(resource, oid):
     if request.method == "POST":
         response = da.dynamic_api(resource, logic.edit_resource, oid, request.get_json(force=True))
     elif request.method == "DELETE":
-        response = da.dynamic_api(resource, logic.delete_resource, oid)
+        response = da.dynamic_api(resource, logic.delete_resource, oid, request.args.get('rname', None), request.args.get('parent_resource', None))
     else:
         response = da.dynamic_api(resource, logic.get_resource, oid)
     return response
